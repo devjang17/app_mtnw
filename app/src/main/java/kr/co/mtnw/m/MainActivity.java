@@ -1,82 +1,36 @@
 package kr.co.mtnw.m;
 
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.KeyEvent;
-import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.FrameLayout;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import java.net.URISyntaxException;
 
 public class MainActivity extends AppCompatActivity {
-
     private WebView mWebView;
     private String myUrl = "http://m.mtnw.co.kr/";
-    //private String myUrl = "http://mdev.sincontool.co.kr/a.php";
     private String packageName = "kr.co.futurewiz.gen5mediaplayer";
     private boolean mFlag = false;
-    private final Handler handler = new Handler();
-    public static FrameLayout mContainer;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         mWebView = (WebView) findViewById(R.id.webView);
         String userAgent = mWebView.getSettings().getUserAgentString();
         mWebView.getSettings().setUserAgentString(userAgent+" inApp");
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
         mWebView.getSettings().setSupportMultipleWindows(true);
-        mWebView.addJavascriptInterface(new WebAppInterface(this), "Android");
         mWebView.loadUrl(myUrl);
         mWebView.setWebChromeClient(new WebChromeClientClass());
         mWebView.setWebViewClient(new WebViewClientClass());
-
-        // 현재 앱 버전 확인
-        PackageInfo pInfo = null;
-        try {
-            pInfo = getPackageManager().getPackageInfo(this.getPackageName(), 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        int versionCode = pInfo.versionCode;
-        String versionName = pInfo.versionName; // build.gradle 에 기록된 VersionName
-        //Toast.makeText(this, " Ver "+versionName, Toast.LENGTH_SHORT).show();
-    }
-
-    public class WebAppInterface {
-        Context mContext;
-
-        WebAppInterface(Context c) {
-            mContext = c;
-        }
-
-        @JavascriptInterface
-        public void resultAuthSuccess() {
-            Log.e(String.valueOf("resultAuthSuccess"),"resultAuthSuccess");
-            mWebView.loadUrl("javascript:window.close();");
-        }
-
-        @JavascriptInterface
-        public void showToast(String toast) {
-            Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
-        }
     }
 
     private boolean FinishToast() {
@@ -170,23 +124,11 @@ public class MainActivity extends AppCompatActivity {
     private class WebChromeClientClass extends WebChromeClient {
         @Override
         public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
-
-            //mContainer = (FrameLayout) findViewById(R.id.webview_frame);
             WebView mWebViewPop = new WebView(view.getContext());
             mWebViewPop.getSettings().setJavaScriptEnabled(true);
             mWebViewPop.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
             mWebViewPop.getSettings().setSupportMultipleWindows(true);
             mWebViewPop.getSettings().setDomStorageEnabled(true);
-            mWebViewPop.setWebChromeClient(new WebChromeClient(){
-                @Override
-                public void onCloseWindow(WebView window) {
-                    Log.e(String.valueOf("resultMsg"),"onCloseWindow");
-                   // mContainer.removeView(window);
-                    window.destroy();
-                }
-            });
-            //mWebViewPop.addJavascriptInterface(new WebAppInterface(view.getContext()), "Android");
-            //mContainer.addView(mWebViewPop);
             WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
             transport.setWebView(mWebViewPop);
             resultMsg.sendToTarget();
